@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>goAML XML Report Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d1117;--surface:#161b22;--surface2:#1c2330;--border:#30363d;--border2:#21262d;--accent:#00b4d8;--accent2:#0077b6;--green:#3fb950;--red:#f85149;--yellow:#d29922;--text:#e6edf3;--text2:#8b949e;--text3:#6e7681;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;font-size:14px}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 22px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:14px;font-weight:600;color:var(--accent)}
+  .logo-icon{width:26px;height:26px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+  .header-right{display:flex;align-items:center;gap:6px}
+  .badge{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(0,180,216,0.1);color:var(--accent);border:1px solid rgba(0,180,216,0.25)}
+  .lang-sw{display:flex;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:2px}
+  .lang-btn{padding:3px 9px;border-radius:3px;border:none;background:transparent;color:var(--text3);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.12s;font-weight:600}
+  .lang-btn.active{background:var(--accent);color:#000}
+  .lang-btn:hover:not(.active){color:var(--text2);background:var(--surface2)}
+  .app{display:grid;grid-template-columns:248px 1fr 355px;height:calc(100vh - 52px)}
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:8px 0}
+  .sidebar-label{font-family:var(--mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);padding:10px 13px 4px}
+  .nav-btn{width:100%;text-align:left;padding:8px 13px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--sans);font-size:13px;display:flex;align-items:center;gap:7px;transition:all 0.12s;border-left:3px solid transparent}
+  .nav-btn:hover{background:var(--surface2);color:var(--text)}
+  .nav-btn.active{background:rgba(0,180,216,0.08);color:var(--accent);border-left-color:var(--accent)}
+  .tx-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .d-blue{background:#58a6ff}.d-purple{background:#bc8cff}.d-orange{background:#ffa657}.d-green{background:#3fb950}.d-red{background:#f78166}.d-yellow{background:#d29922}
+  .tx-list-item{display:flex;align-items:center;justify-content:space-between;padding:7px 13px;cursor:pointer;transition:all 0.12s;border-left:3px solid transparent}
+  .tx-list-item:hover{background:var(--surface2)}
+  .tx-list-item.active{background:rgba(0,180,216,0.08);border-left-color:var(--accent)}
+  .tx-list-left{display:flex;align-items:center;gap:7px}
+  .tx-list-type{font-size:12px;color:var(--text2)}
+  .tx-list-num{font-family:var(--mono);font-size:10px;color:var(--text3)}
+  .tx-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:2px 5px;border-radius:3px}
+  .tx-del:hover{color:var(--red);background:rgba(248,81,73,0.1)}
+  .main{overflow-y:auto;padding:20px 24px;background:var(--bg)}
+  .sec-title{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);padding:0 0 7px;border-bottom:1px solid var(--border2);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+  .sec-title .tag{font-size:9px;color:var(--text3);font-weight:400}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:13px;margin-bottom:12px}
+  .card-title{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:11px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:3px}
+  .form-grid.c1{grid-template-columns:1fr}.form-grid.c3{grid-template-columns:1fr 1fr 1fr}
+  .field{display:flex;flex-direction:column;gap:3px}
+  .field.s2{grid-column:span 2}.field.s3{grid-column:span 3}
+  .field label{font-family:var(--mono);font-size:10px;color:var(--text3);font-weight:500;display:flex;align-items:center;flex-wrap:wrap;gap:2px}
+  .req{color:var(--red)}.xh{font-size:8px;color:var(--text3);opacity:0.6;margin-left:2px}
+  .field input,.field select,.field textarea{background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:6px 9px;font-family:var(--mono);font-size:11px;outline:none;transition:border-color 0.15s;width:100%}
+  .field textarea{resize:vertical;min-height:54px}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,180,216,0.1)}
+  .field select option{background:var(--surface2)}
+  .field .em{font-size:9px;color:var(--red);font-family:var(--mono);display:none}
+  .field.err .em{display:block}.field.err input,.field.err select,.field.err textarea{border-color:var(--red)!important}
+  .ft-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+  .side-card{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:12px}
+  .side-hdr{font-family:var(--mono);font-size:10px;font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:5px}
+  .from-hdr{color:#ffa657}.to-hdr{color:#58a6ff}
+  .sub{background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:10px;margin-bottom:8px}
+  .sub-t{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:8px}
+  .alert{padding:7px 11px;border-radius:4px;font-size:11px;margin-bottom:10px;border:1px solid;line-height:1.5}
+  .a-info{background:rgba(0,180,216,0.07);border-color:rgba(0,180,216,0.25);color:var(--accent)}
+  .a-warn{background:rgba(210,153,34,0.07);border-color:rgba(210,153,34,0.3);color:var(--yellow)}
+  .btn{padding:6px 12px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.12s;display:inline-flex;align-items:center;gap:4px}
+  .btn-p{background:var(--accent);border-color:var(--accent);color:#000}.btn-p:hover{background:#00c8f0}
+  .btn-s{background:transparent;border-color:var(--border);color:var(--text2)}.btn-s:hover{border-color:var(--text);color:var(--text)}
+  .btn-g{background:var(--green);border-color:var(--green);color:#000}.btn-g:hover{background:#4dc862}
+  .form-actions{display:flex;gap:7px;padding:10px 0 0;border-top:1px solid var(--border2);margin-top:7px}
+  .tx-fhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .tx-ftitle{font-family:var(--mono);font-size:12px;color:var(--text);font-weight:600;display:flex;align-items:center;gap:7px}
+  .preview{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column}
+  .preview-hdr{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .preview-title{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:5px}
+  .preview-body{flex:1;overflow-y:auto;padding:12px}
+  pre#xp{font-family:var(--mono);font-size:10px;line-height:1.8;color:var(--text2);white-space:pre-wrap;word-break:break-all}
+  .xt{color:#7ee787}.xv{color:#a5d6ff}.xc{color:var(--text3);font-style:italic}
+  .vbar{padding:7px 12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:10px;flex-shrink:0}
+  .s-ok{color:var(--green)}.s-err{color:var(--red)}.s-w{color:var(--yellow)}
+  .empty-tx{text-align:center;padding:16px;color:var(--text3);font-size:11px;font-family:var(--mono)}
+  .ind-grid{display:flex;flex-wrap:wrap;gap:5px}
+  .ind-chip{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-family:var(--mono);font-size:10px;color:var(--text2);cursor:pointer;transition:all 0.12s;user-select:none}
+  .ind-chip input{width:11px;height:11px;cursor:pointer;accent-color:var(--accent)}
+  .ind-chip.sel{border-color:var(--accent);color:var(--accent);background:rgba(0,180,216,0.08)}
+  ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .div{height:1px;background:var(--border2);margin:9px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-icon">gA</div>goAML XML Generator</div>
+  <div class="header-right">
+    <span class="badge">Luxembourg CRF · goAML 5.x</span>
+    <div class="lang-sw">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('fr')">FR</button>
+      <button class="lang-btn" onclick="setLang('zh')">中文</button>
+    </div>
+    <button class="btn btn-s" id="hdr-sample" onclick="loadSample()" style="font-size:10px;padding:4px 9px"></button>
+    <button class="btn btn-g" id="hdr-export" onclick="exportTXT()"></button>
+  </div>
+</header>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-label" id="lbl-report"></div>
+    <button class="nav-btn active" id="navbtn-report" onclick="showPage('report')">&#9654; <span id="nav-report-lbl"></span></button>
+    <button class="nav-btn" id="navbtn-indicators" onclick="showPage('indicators')">&#9873; <span id="nav-ind-lbl"></span></button>
+    <div class="sidebar-label" style="margin-top:4px"><span id="lbl-transactions"></span> <span id="txCount" style="color:var(--accent)">0</span></div>
+    <div id="txList"><div class="empty-tx" id="empty-tx-msg"></div></div>
+    <div style="padding:8px 13px 0">
+      <button class="btn btn-p" id="btn-add-tx" style="width:100%;justify-content:center" onclick="openAddTxModal()"></button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div id="page-report">
+      <div class="sec-title"><span id="pt-report-title"></span><span class="tag">&lt;report&gt;</span></div>
+      <div class="alert a-info" id="alert-xml-decl"></div>
+      <div class="card">
+        <div class="card-title" id="card-submission"></div>
+        <div class="form-grid">
+          <div class="field" id="f-rentity_id">
+            <label><span class="req">*</span> <span id="lf-rentity_id"></span> <span class="xh">&lt;rentity_id&gt;</span></label>
+            <input type="text" id="rentity_id" placeholder="e.g. 1" oninput="vld(this,'req|num')" onchange="upd()">
+            <span class="em" id="em-rentity_id"></span></div>
+          <div class="field" id="f-submission_code">
+            <label><span class="req">*</span> <span id="lf-submission_code"></span> <span class="xh">&lt;submission_code&gt;</span></label>
+            <select id="submission_code" onchange="upd()">
+              <option value="E">E — New Report / Nouveau rapport / 新申报</option>
+              <option value="A">A — Amendment / Correction / 修正申报</option>
+              <option value="S">S — Supplementary / Complémentaire / 补充申报</option>
+            </select></div>
+          <div class="field" id="f-report_code">
+            <label><span class="req">*</span> <span id="lf-report_code"></span> <span class="xh">&lt;report_code&gt;</span></label>
+            <select id="report_code" onchange="upd()">
+              <option value="STR">STR — Suspicious Transaction Report</option>
+              <option value="SAR">SAR — Suspicious Activity Report</option>
+              <option value="RIRT">RIRT — Response to Information Request</option>
+              <option value="TFTR">TFTR — Terrorist Financing Transaction Report</option>
+              <option value="CTR">CTR — Cash Transaction Report</option>
+            </select></div>
+          <div class="field" id="f-entity_reference">
+            <label><span class="req">*</span> <span id="lf-entity_reference"></span> <span class="xh">&lt;entity_reference&gt;</span></label>
+            <input type="text" id="entity_reference" placeholder="e.g. ma-reference-2024" oninput="vld(this,'req')" onchange="upd()">
+            <span class="em" id="em-entity_reference"></span></div>
+          <div class="field" id="f-submission_date">
+            <label><span class="req">*</span> <span id="lf-submission_date"></span> <span class="xh">&lt;submission_date&gt;</span></label>
+            <input type="text" id="submission_date" placeholder="YYYY-MM-DD" maxlength="10" oninput="vld(this,'req|date')" onchange="upd()">
+            <span class="em" id="em-submission_date"></span></div>
+          <div class="field" id="f-currency_code_local">
+            <label><span class="req">*</span> <span id="lf-currency_code_local"></span> <span class="xh">&lt;currency_code_local&gt;</span></label>
+            <select id="currency_code_local" onchange="upd()">
+              <option value="EUR">EUR — Euro</option><option value="USD">USD — US Dollar</option>
+              <option value="GBP">GBP — British Pound</option><option value="CHF">CHF — Swiss Franc</option>
+            </select></div>
+          <div class="field s2" id="f-reason">
+            <label><span class="req">*</span> <span id="lf-reason"></span> <span class="xh">&lt;reason&gt;</span></label>
+            <textarea id="reason" rows="3" oninput="vld(this,'req')" onchange="upd()"></textarea>
+            <span class="em" id="em-reason"></span></div>
+        </div>
+      </div>
+    </div>
+    <div id="tx-pages"></div>
+    <div id="page-indicators" style="display:none">
+      <div class="sec-title"><span id="pt-ind-title"></span><span class="tag">&lt;report_indicators&gt;</span></div>
+      <div class="alert a-warn" id="alert-ind"></div>
+      <div class="card">
+        <div class="card-title" id="card-ind-title"></div>
+        <div class="ind-grid" id="indGrid"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-s" id="act-back-report" onclick="showPage('report')"></button>
+        <button class="btn btn-g" id="act-export-ind" onclick="exportTXT()"></button>
+      </div>
+    </div>
+  </main>
+
+  <aside class="preview">
+    <div class="preview-hdr">
+      <div class="preview-title"><span style="color:var(--green)">&#9679;</span> <span id="preview-lbl"></span></div>
+      <div style="display:flex;gap:5px">
+        <button class="btn btn-s" id="btn-copy" style="font-size:10px;padding:3px 8px" onclick="copyXML()"></button>
+        <button class="btn btn-g" id="btn-exp2" style="font-size:10px;padding:3px 8px" onclick="exportTXT()"></button>
+      </div>
+    </div>
+    <div class="preview-body"><pre id="xp"><span class="xc">&lt;!-- ... --&gt;</span></pre></div>
+    <div class="vbar"><span class="s-w" id="vStatus"></span><span id="vCount" style="color:var(--text3)">—</span></div>
+  </aside>
+</div>
+
+<script>
+let LANG='en', transactions=[], txCounter=0;
+
+// ── i18n dictionary ───────────────────────────────────────────────────────────
+const L={
+  // Header buttons
+  hdr_sample:{en:'Load Sample',fr:'Exemple',zh:'加载示例'},
+  hdr_export:{en:'↓ Export .txt',fr:'↓ Exporter .txt',zh:'↓ 导出 .txt'},
+  // Sidebar
+  lbl_report:{en:'Report',fr:'Déclaration',zh:'申报'},
+  nav_report:{en:'Report Header',fr:'En-tête',zh:'申报头部'},
+  nav_ind:{en:'Indicators',fr:'Indicateurs',zh:'申报指标'},
+  lbl_tx:{en:'Transactions',fr:'Transactions',zh:'交易记录'},
+  empty_tx:{en:'None yet',fr:'Aucune',zh:'暂无交易'},
+  btn_add:{en:'+ Add Transaction',fr:'+ Ajouter transaction',zh:'+ 添加交易'},
+  // Page titles
+  pt_report:{en:'Report Header',fr:'En-tête de la déclaration',zh:'申报头部'},
+  pt_ind:{en:'Report Indicators',fr:'Indicateurs de déclaration',zh:'申报指标'},
+  alert_xml:{en:'Output starts directly with <report> — no XML declaration. goAML rejects files beginning with &lt;?xml...?&gt;.',
+             fr:'Le fichier commence par &lt;report&gt; sans déclaration XML. goAML rejette les fichiers commençant par &lt;?xml...?&gt;.',
+             zh:'导出文件直接以 &lt;report&gt; 开头，不含 XML 声明。goAML 会拒绝以 &lt;?xml...?&gt; 开头的文件。'},
+  alert_ind:{en:'Indicator numbers are defined by the Luxembourg CRF. Select all that apply.',
+             fr:'Les indicateurs sont définis par la CRF Luxembourg. Sélectionnez tous ceux applicables.',
+             zh:'指标编号由卢森堡 CRF 官方定义，请选择所有适用于本申报的指标。'},
+  card_submission:{en:'Submission Details',fr:'Détails de la soumission',zh:'提交信息'},
+  card_ind:{en:'Select applicable indicators',fr:'Sélectionner les indicateurs applicables',zh:'选择适用指标'},
+  // Field labels
+  f_rentity_id:{en:'Entity ID',fr:'ID de l\'entité',zh:'机构 ID'},
+  f_submission_code:{en:'Submission Code',fr:'Code de soumission',zh:'提交代码'},
+  f_report_code:{en:'Report Code',fr:'Code de rapport',zh:'申报类型'},
+  f_entity_reference:{en:'Entity Reference',fr:'Référence interne',zh:'机构参考编号'},
+  f_submission_date:{en:'Submission Date',fr:'Date de soumission',zh:'提交日期'},
+  f_currency_code_local:{en:'Local Currency',fr:'Devise locale',zh:'本地货币'},
+  f_reason:{en:'Reason / Narrative',fr:'Motif / Narration',zh:'原因 / 叙述'},
+  reason_ph:{en:'Describe the reason for this report...',fr:'Décrivez le motif de cette déclaration...',zh:'说明申报原因...'},
+  // Errors
+  em_req:{en:'Required',fr:'Obligatoire',zh:'必填'},
+  em_num:{en:'Required — numeric',fr:'Obligatoire — numérique',zh:'必填 — 数字'},
+  em_date:{en:'Required — YYYY-MM-DD',fr:'Obligatoire — YYYY-MM-DD',zh:'必填 — YYYY-MM-DD'},
+  em_amt:{en:'Required — positive number',fr:'Obligatoire — nombre positif',zh:'必填 — 正数'},
+  em_cc:{en:'2-letter ISO code',fr:'Code ISO 2 lettres',zh:'两位 ISO 国家代码'},
+  // Actions
+  act_report:{en:'← Report Header',fr:'← En-tête',zh:'← 申报头部'},
+  act_ind:{en:'Indicators',fr:'Indicateurs',zh:'申报指标'},
+  act_export:{en:'↓ Export .txt',fr:'↓ Exporter .txt',zh:'↓ 导出 .txt'},
+  // Preview
+  preview_lbl:{en:'XML Preview',fr:'Aperçu XML',zh:'XML 预览'},
+  btn_copy:{en:'Copy',fr:'Copier',zh:'复制'},
+  btn_exp:{en:'Export',fr:'Exporter',zh:'导出'},
+  copied:{en:'Copied!',fr:'Copié !',zh:'已复制！'},
+  // Status
+  val_ready:{en:'Ready to export',fr:'Prêt à exporter',zh:'可以导出'},
+  val_err1:{en:'validation error',fr:'erreur de validation',zh:'个校验错误'},
+  val_errN:{en:'validation errors',fr:'erreurs de validation',zh:'个校验错误'},
+  // Modal
+  modal_title:{en:'Choose Transaction Structure',fr:'Choisir la structure de transaction',zh:'选择交易结构'},
+  modal_cancel:{en:'Cancel',fr:'Annuler',zh:'取消'},
+  // Tx types
+  tx_wire:{en:'Wire Transfer',fr:'Virement bancaire',zh:'汇款转账'},
+  tx_card:{en:'Card Payment',fr:'Paiement par carte',zh:'银行卡支付'},
+  tx_remit:{en:'Money Remittance',fr:'Envoi de fonds',zh:'汇款业务'},
+  tx_fxwith:{en:'FX / Cash Withdrawal',fr:'Change / Retrait espèces',zh:'外汇 / 现金取款'},
+  tx_insur:{en:'Insurance Redemption',fr:'Rachat assurance',zh:'保险赎回'},
+  tx_deposit:{en:'Cash Deposit',fr:'Versement espèces',zh:'现金存款'},
+  tx_custom:{en:'Custom Transaction',fr:'Transaction personnalisée',zh:'自定义交易'},
+  sub_wire:{en:'My account → External account',fr:'Mon compte → Compte externe',zh:'我方账户 → 外部账户'},
+  sub_card:{en:'My account → My card account',fr:'Mon compte → Ma carte',zh:'我方账户 → 我方银行卡'},
+  sub_remit:{en:'My client (person) → External + FX',fr:'Mon client (personne) → Externe + change',zh:'我方客户（个人）→ 外部 + 外币'},
+  sub_fxwith:{en:'My account → My client + FX',fr:'Mon compte → Mon client + change',zh:'我方账户 → 我方客户 + 外币'},
+  sub_insur:{en:'My insurance account → External',fr:'Mon contrat assurance → Externe',zh:'我方保险账户 → 外部账户'},
+  sub_deposit:{en:'External person → My account',fr:'Personne externe → Mon compte',zh:'外部个人 → 我方账户'},
+  sub_custom:{en:'Configure all settings freely',fr:'Configurer librement',zh:'自由配置所有设置'},
+  tx_num_pfx:{en:'TX #',fr:'TX n°',zh:'交易 #'},
+  // Tx form
+  core_fields:{en:'Core Fields',fr:'Champs principaux',zh:'核心字段'},
+  tx_number:{en:'Transaction Number',fr:'Numéro de transaction',zh:'交易编号'},
+  tx_date:{en:'Transaction Date',fr:'Date de transaction',zh:'交易日期'},
+  tx_amount:{en:'Amount (Local)',fr:'Montant (local)',zh:'本地金额'},
+  tx_mode:{en:'Transaction Mode',fr:'Mode de transaction',zh:'交易方式'},
+  tx_desc:{en:'Description',fr:'Description',zh:'交易描述'},
+  tx_location:{en:'Transaction Location',fr:'Lieu de transaction',zh:'交易地点'},
+  tx_loc_ph:{en:'Agent / Branch (optional)',fr:'Agent / Agence (facultatif)',zh:'代理机构 / 分行（可选）'},
+  mode_A:{en:'A — Electronic transfer',fr:'A — Virement électronique',zh:'A — 电子转账'},
+  mode_B:{en:'B — Cash',fr:'B — Espèces',zh:'B — 现金'},
+  mode_C:{en:'C — Cheque',fr:'C — Chèque',zh:'C — 支票'},
+  mode_D:{en:'D — Card',fr:'D — Carte',zh:'D — 银行卡'},
+  mode_X:{en:'X — Other',fr:'X — Autre',zh:'X — 其他'},
+  // Party config
+  party_config:{en:'Party Configuration',fr:'Configuration des parties',zh:'交易方配置'},
+  from_side:{en:'FROM',fr:'DÉBIT',zh:'付款方 FROM'},
+  to_side:{en:'TO',fr:'CRÉDIT',zh:'收款方 TO'},
+  my_client_q:{en:'My client?',fr:'Mon client ?',zh:'我方客户？'},
+  structure_lbl:{en:'Structure',fr:'Structure',zh:'结构类型'},
+  from_my:{en:'Yes — t_from_my_client',fr:'Oui — t_from_my_client',zh:'是 — t_from_my_client'},
+  from_ext:{en:'No — t_from (external)',fr:'Non — t_from (externe)',zh:'否 — t_from（外部）'},
+  to_ext:{en:'No — t_to (external)',fr:'Non — t_to (externe)',zh:'否 — t_to（外部）'},
+  to_my:{en:'Yes — t_to_my_client',fr:'Oui — t_to_my_client',zh:'是 — t_to_my_client'},
+  acc_struct:{en:'Account',fr:'Compte',zh:'账户'},
+  per_struct:{en:'Person only',fr:'Personne uniquement',zh:'仅个人'},
+  fx_struct:{en:'Foreign Currency (+person)',fr:'Devise étrangère (+personne)',zh:'外币（+收款人）'},
+  from_funds:{en:'Funds Code',fr:'Code fonds débit',zh:'付款资金代码'},
+  to_funds:{en:'Funds Code',fr:'Code fonds crédit',zh:'收款资金代码'},
+  from_country:{en:'From Country',fr:'Pays débiteur',zh:'付款国'},
+  to_country:{en:'To Country',fr:'Pays créditeur',zh:'收款国'},
+  // Funds codes
+  funds_sel:{en:'— Select —',fr:'— Sélectionner —',zh:'— 请选择 —'},
+  funds_Q:{en:'Q — Wire transfer / virement',fr:'Q — Virement bancaire',zh:'Q — 汇款转账'},
+  funds_G:{en:'G — Card payment',fr:'G — Paiement par carte',zh:'G — 银行卡支付'},
+  funds_S:{en:'S — Money remittance',fr:'S — Envoi de fonds',zh:'S — 汇款业务'},
+  funds_H:{en:'H — Cash withdrawal / FX',fr:'H — Retrait / change',zh:'H — 现金取款 / 外汇'},
+  funds_K:{en:'K — Insurance redemption',fr:'K — Rachat assurance',zh:'K — 保险赎回'},
+  funds_O:{en:'O — Cash deposit',fr:'O — Versement espèces',zh:'O — 现金存款'},
+  funds_F:{en:'F — Securities / investment',fr:'F — Titres / investissement',zh:'F — 有价证券 / 投资'},
+  funds_T:{en:'T — Other',fr:'T — Autre',zh:'T — 其他'},
+  // Account fields
+  acc_section:{en:'Account',fr:'Compte',zh:'账户'},
+  acc_swift:{en:'SWIFT / BIC',fr:'SWIFT / BIC',zh:'SWIFT / BIC'},
+  acc_number:{en:'Account No.',fr:'Numéro de compte',zh:'账户号码'},
+  acc_iban:{en:'IBAN',fr:'IBAN',zh:'IBAN'},
+  acc_name:{en:'Account Name',fr:'Nom du titulaire',zh:'账户名称'},
+  acc_currency:{en:'Currency',fr:'Devise',zh:'货币'},
+  acc_client:{en:'Client Number',fr:'Numéro client',zh:'客户编号'},
+  acc_type:{en:'Account Type',fr:'Type de compte',zh:'账户类型'},
+  acc_status:{en:'Status',fr:'Statut',zh:'状态'},
+  acc_opened:{en:'Date Opened',fr:"Date d'ouverture",zh:'开户日期'},
+  acc_closed:{en:'Date Closed',fr:'Date de clôture',zh:'关户日期'},
+  acc_balance:{en:'Balance',fr:'Solde',zh:'账户余额'},
+  acc_baldate:{en:'Balance Date',fr:'Date du solde',zh:'余额日期'},
+  at_C:{en:'C — Current account',fr:'C — Compte courant',zh:'C — 活期账户'},
+  at_S:{en:'S — Savings account',fr:'S — Compte épargne',zh:'S — 储蓄账户'},
+  at_A:{en:'A — Credit card',fr:'A — Carte de crédit',zh:'A — 信用卡'},
+  at_B:{en:'B — Debit card',fr:'B — Carte de débit',zh:'B — 借记卡'},
+  at_V:{en:'V — Insurance/investment',fr:'V — Assurance/investissement',zh:'V — 保险/投资'},
+  st_blank:{en:'—',fr:'—',zh:'—'},
+  st_A:{en:'A — Active',fr:'A — Actif',zh:'A — 活跃'},
+  st_E:{en:'E — Expired/Closed',fr:'E — Clôturé',zh:'E — 已关闭'},
+  st_I:{en:'I — Inactive',fr:'I — Inactif',zh:'I — 不活跃'},
+  // Signatory
+  sig_full:{en:'Signatory / Account Holder',fr:'Signataire / Titulaire',zh:'账户开立人 / Signatory'},
+  sig_role:{en:'Signatory Role',fr:'Rôle du signataire',zh:'签署人角色'},
+  role_A:{en:'A — Account holder',fr:'A — Titulaire du compte',zh:'A — 账户持有人'},
+  role_B:{en:'B — Authorized signatory',fr:'B — Signataire autorisé',zh:'B — 授权签名人'},
+  role_C:{en:'C — Beneficial owner',fr:'C — Bénéficiaire effectif',zh:'C — 实际受益人'},
+  role_D:{en:'D — Director',fr:'D — Directeur',zh:'D — 董事'},
+  role_E:{en:'E — Other',fr:'E — Autre',zh:'E — 其他'},
+  // Person
+  per_section:{en:'Person',fr:'Personne',zh:'个人信息'},
+  per_gender:{en:'Gender',fr:'Genre',zh:'性别'},
+  per_fname:{en:'First Name',fr:'Prénom',zh:'名字'},
+  per_lname:{en:'Last Name',fr:'Nom de famille',zh:'姓氏'},
+  per_dob:{en:'Date of Birth',fr:'Date de naissance',zh:'出生日期'},
+  per_pob:{en:'Birth Place',fr:'Lieu de naissance',zh:'出生地'},
+  per_nat:{en:'Nationality',fr:'Nationalité',zh:'国籍'},
+  per_res:{en:'Residence',fr:'Résidence',zh:'居住地'},
+  per_passport:{en:'Passport No.',fr:'Numéro de passeport',zh:'护照号码'},
+  per_ppc:{en:'Passport Country',fr:'Pays du passeport',zh:'护照签发国'},
+  gender_M:{en:'M — Male',fr:'M — Masculin',zh:'M — 男'},
+  gender_F:{en:'F — Female',fr:'F — Féminin',zh:'F — 女'},
+  // Address
+  addr_section:{en:'Address',fr:'Adresse',zh:'地址'},
+  addr_type:{en:'Type',fr:'Type',zh:'类型'},
+  addr_zip:{en:'ZIP',fr:'Code postal',zh:'邮编'},
+  addr_country:{en:'Country',fr:'Pays',zh:'国家'},
+  addr_street:{en:'Street',fr:'Rue',zh:'街道'},
+  addr_city:{en:'City',fr:'Ville',zh:'城市'},
+  addr_t1:{en:'1 — Home',fr:'1 — Domicile',zh:'1 — 住宅'},
+  addr_t2:{en:'2 — Business',fr:'2 — Professionnel',zh:'2 — 商业'},
+  addr_t3:{en:'3 — Other',fr:'3 — Autre',zh:'3 — 其他'},
+  // FX
+  fx_section:{en:'Foreign Currency',fr:'Devise étrangère',zh:'外币信息'},
+  fx_code:{en:'Currency Code',fr:'Code devise',zh:'货币代码'},
+  fx_amount:{en:'Foreign Amount',fr:'Montant en devise',zh:'外币金额'},
+  fx_rate:{en:'Exchange Rate',fr:'Taux de change',zh:'汇率'},
+  fx_recip:{en:'Recipient Person',fr:'Personne bénéficiaire',zh:'收款人'},
+};
+const T=k=>L[k]?(L[k][LANG]||L[k].en):k;
+
+const INDICATORS=[
+  {n:'1', en:'Structured transactions',fr:'Transactions structurées',zh:'结构性交易'},
+  {n:'2', en:'Unusual size or pattern',fr:'Taille ou schéma inhabituel',zh:'异常金额或模式'},
+  {n:'3', en:'Shell company involvement',fr:'Implication société-écran',zh:'涉及壳公司'},
+  {n:'4', en:'High-risk jurisdiction',fr:'Juridiction à haut risque',zh:'高风险司法管辖区'},
+  {n:'5', en:'PEP involvement',fr:'Implication d\'un PPE',zh:'涉及PEP政治人士'},
+  {n:'6', en:'Complex ownership structure',fr:'Structure de propriété complexe',zh:'复杂所有权结构'},
+  {n:'7', en:'Frequent cash transactions',fr:'Espèces fréquentes',zh:'频繁现金交易'},
+  {n:'8', en:'Inconsistent with client profile',fr:'Incohérent avec le profil client',zh:'与客户档案不符'},
+  {n:'9', en:'Layering detected',fr:'Stratification détectée',zh:'发现洗钱分层'},
+  {n:'10',en:'Sanctions list match',fr:'Liste de sanctions',zh:'命中制裁名单'},
+  {n:'11',en:'Trade-based ML',fr:'Blanchiment via commerce',zh:'基于贸易的洗钱'},
+  {n:'12',en:'Real estate transaction',fr:'Transaction immobilière',zh:'房地产交易'},
+  {n:'13',en:'Virtual asset transaction',fr:'Actifs virtuels',zh:'虚拟资产交易'},
+  {n:'14',en:'Terrorist financing suspicion',fr:'Financement terrorisme',zh:'疑似恐怖融资'},
+  {n:'15',en:'Proliferation financing',fr:'Financement prolifération',zh:'扩散融资'},
+  {n:'16',en:'Tax evasion indicators',fr:'Évasion fiscale',zh:'税务逃避指标'},
+  {n:'17',en:'Fraud suspicion',fr:'Suspicion de fraude',zh:'疑似欺诈'},
+  {n:'18',en:'Unusual wire transfer pattern',fr:'Schéma virement inhabituel',zh:'异常汇款模式'},
+  {n:'19',en:'Identity / document anomaly',fr:'Anomalie identité/document',zh:'身份/证件异常'},
+  {n:'20',en:'Behaviour-based suspicion',fr:'Suspicion comportementale',zh:'行为异常可疑'},
+  {n:'21',en:'Unusual account opening',fr:'Ouverture compte inhabituelle',zh:'异常开户'},
+  {n:'22',en:'Multiple accounts same purpose',fr:'Comptes multiples même usage',zh:'多账户相同目的'},
+  {n:'23',en:'Rapid fund movement',fr:'Mouvements rapides de fonds',zh:'资金快速流动'},
+  {n:'24',en:'Large cash transaction',fr:'Espèces importantes',zh:'大额现金交易'},
+  {n:'25',en:'Unexplained wealth source',fr:'Richesse inexpliquée',zh:'财富来源不明'},
+];
+
+const TX_PRESETS={
+  wire:   {lk:'tx_wire',  sk:'sub_wire',   dot:'d-blue',  fromClient:true, fromType:'account',toClient:false,toType:'account',hasFX:false},
+  card:   {lk:'tx_card',  sk:'sub_card',   dot:'d-purple',fromClient:true, fromType:'account',toClient:true, toType:'account',hasFX:false},
+  remit:  {lk:'tx_remit', sk:'sub_remit',  dot:'d-orange',fromClient:true, fromType:'person', toClient:false,toType:'fx',     hasFX:true},
+  fxwith: {lk:'tx_fxwith',sk:'sub_fxwith', dot:'d-green', fromClient:true, fromType:'account',toClient:true, toType:'fx',     hasFX:true},
+  insur:  {lk:'tx_insur', sk:'sub_insur',  dot:'d-red',   fromClient:true, fromType:'account',toClient:false,toType:'account',hasFX:false},
+  deposit:{lk:'tx_deposit',sk:'sub_deposit',dot:'d-yellow',fromClient:false,fromType:'person', toClient:true, toType:'account',hasFX:false},
+  custom: {lk:'tx_custom',sk:'sub_custom', dot:'d-blue',  fromClient:true, fromType:'account',toClient:false,toType:'account',hasFX:false},
+};
+
+// ── APPLY LANGUAGE ─────────────────────────────────────────────────────────────
+function applyLang(){
+  // static elements
+  const map={
+    'hdr-sample':'hdr_sample','hdr-export':'hdr_export',
+    'lbl-report':'lbl_report','nav-report-lbl':'nav_report','nav-ind-lbl':'nav_ind',
+    'lbl-transactions':'lbl_tx','empty-tx-msg':'empty_tx','btn-add-tx':'btn_add',
+    'pt-report-title':'pt_report','pt-ind-title':'pt_ind',
+    'alert-xml-decl':'alert_xml','alert-ind':'alert_ind',
+    'card-submission':'card_submission','card-ind-title':'card_ind',
+    'lf-rentity_id':'f_rentity_id','lf-submission_code':'f_submission_code',
+    'lf-report_code':'f_report_code','lf-entity_reference':'f_entity_reference',
+    'lf-submission_date':'f_submission_date','lf-currency_code_local':'f_currency_code_local',
+    'lf-reason':'f_reason',
+    'em-rentity_id':'em_num','em-entity_reference':'em_req',
+    'em-submission_date':'em_date','em-reason':'em_req',
+    'act-back-report':'act_report','act-export-ind':'act_export',
+    'preview-lbl':'preview_lbl','btn-copy':'btn_copy','btn-exp2':'btn_exp',
+  };
+  Object.entries(map).forEach(([id,k])=>{const e=document.getElementById(id);if(e)e.innerHTML=T(k);});
+  // reason placeholder
+  const rp=document.getElementById('reason');if(rp)rp.placeholder=T('reason_ph');
+  // rebuild indicators
+  buildIndicators();
+  // rebuild tx list labels
+  renderTxList();
+  // update status
+  updateStatus();
+}
+
+function setLang(l){
+  LANG=l;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',
+    (l==='en'&&b.textContent==='EN')||(l==='fr'&&b.textContent==='FR')||(l==='zh'&&b.textContent==='中文')));
+  applyLang();
+  // rerender open tx page labels
+  document.querySelectorAll('.tx-page').forEach(tp=>{
+    const id=tp.id.replace('txpage-','');
+    // update select options within the page
+    refreshTxPageLabels(id);
+  });
+  upd();
+}
+
+function refreshTxPageLabels(id){
+  // Update selects that have translatable options (mode, from_client, to_client, from_type, to_type, funds)
+  const selUpdates={
+    [`${id}_m`]: [['A',T('mode_A')],['B',T('mode_B')],['C',T('mode_C')],['D',T('mode_D')],['X',T('mode_X')]],
+    [`${id}_fc`]: [['yes',T('from_my')],['no',T('from_ext')]],
+    [`${id}_tc`]: [['no',T('to_ext')],['yes',T('to_my')]],
+    [`${id}_ft`]: [['account',T('acc_struct')],['person',T('per_struct')]],
+    [`${id}_tt`]: [['account',T('acc_struct')],['person',T('per_struct')],['fx',T('fx_struct')]],
+  };
+  Object.entries(selUpdates).forEach(([sid,opts])=>{
+    const el=document.getElementById(sid);if(!el)return;
+    const val=el.value;
+    el.innerHTML=opts.map(([v,t])=>`<option value="${v}">${t}</option>`).join('');
+    el.value=val;
+  });
+  // Update funds selects
+  ['ff','tf'].forEach(suffix=>{
+    const el=document.getElementById(`${id}_${suffix}`);if(!el)return;
+    const val=el.value;
+    el.innerHTML=buildFundsHTML();el.value=val;
+  });
+  // All account type selects on this page
+  document.querySelectorAll(`#txpage-${id} select`).forEach(sel=>{
+    if(sel.id.endsWith('_at')&&sel.options.length===6){
+      // account type select (6 options including blank)
+      const val=sel.value;
+      sel.innerHTML=`<option value="">—</option><option value="C">${T('at_C')}</option><option value="S">${T('at_S')}</option><option value="A">${T('at_A')}</option><option value="B">${T('at_B')}</option><option value="V">${T('at_V')}</option>`;
+      sel.value=val;
+    } else if(sel.id.endsWith('_st')&&sel.options.length===4){
+      const val=sel.value;
+      sel.innerHTML=`<option value="">—</option><option value="A">${T('st_A')}</option><option value="E">${T('st_E')}</option><option value="I">${T('st_I')}</option>`;
+      sel.value=val;
+    } else if(sel.id.endsWith('_at')&&sel.options.length===3){
+      // address type select
+      const val=sel.value;
+      sel.innerHTML=`<option value="1">${T('addr_t1')}</option><option value="2">${T('addr_t2')}</option><option value="3">${T('addr_t3')}</option>`;
+      sel.value=val;
+    } else if(sel.id.endsWith('_ge')){
+      const val=sel.value;
+      sel.innerHTML=`<option value="">—</option><option value="M">${T('gender_M')}</option><option value="F">${T('gender_F')}</option>`;
+      sel.value=val;
+    } else if(sel.id.endsWith('_sg_role')){
+      const val=sel.value;
+      sel.innerHTML=`<option value="A">${T('role_A')}</option><option value="B">${T('role_B')}</option><option value="C">${T('role_C')}</option><option value="D">${T('role_D')}</option><option value="E">${T('role_E')}</option>`;
+      sel.value=val;
+    }
+  });
+}
+
+function buildFundsHTML(){
+  return ['','Q','G','S','H','K','O','F','T'].map(v=>
+    `<option value="${v}">${T(v?'funds_'+v:'funds_sel')}</option>`).join('');
+}
+
+function buildIndicators(){
+  const saved=[...document.querySelectorAll('#indGrid input:checked')].map(i=>i.value);
+  document.getElementById('indGrid').innerHTML=INDICATORS.map(i=>{
+    const lbl=i[LANG]||i.en;
+    const isSel=saved.includes(i.n);
+    return `<label class="ind-chip${isSel?' sel':''}" id="ind-${i.n}" onclick="this.classList.toggle('sel',this.querySelector('input').checked);upd()">
+      <input type="checkbox" value="${i.n}" ${isSel?'checked':''} onchange="upd()"> #${i.n} ${lbl}
+    </label>`;
+  }).join('');
+}
+function getInds(){return[...document.querySelectorAll('#indGrid input:checked')].map(i=>i.value);}
+
+function vld(el,rules){
+  const w=el.closest('.field');const val=el.value.trim();let ok=true;
+  if(rules.includes('req')&&!val)ok=false;
+  if(ok&&rules.includes('num')&&val&&isNaN(Number(val)))ok=false;
+  if(ok&&rules.includes('amt')&&val&&(isNaN(Number(val))||Number(val)<=0))ok=false;
+  if(ok&&rules.includes('cc')&&val&&!/^[A-Z]{2}$/.test(val))ok=false;
+  if(ok&&rules.includes('date')&&val&&!/^\d{4}-\d{2}-\d{2}$/.test(val))ok=false;
+  if(w)w.classList.toggle('err',!ok);upd();return ok;
+}
+
+function showPage(n){
+  document.getElementById('page-report').style.display=n==='report'?'block':'none';
+  document.getElementById('page-indicators').style.display=n==='indicators'?'block':'none';
+  document.querySelectorAll('.tx-page').forEach(p=>p.style.display='none');
+  if(n.startsWith('tx-')){const e=document.getElementById('txpage-'+n.slice(3));if(e)e.style.display='block';}
+  document.querySelectorAll('.nav-btn[id^="navbtn-"]').forEach(b=>b.classList.remove('active'));
+  const b=document.getElementById('navbtn-'+n);if(b)b.classList.add('active');
+  document.querySelectorAll('.tx-list-item').forEach(i=>i.classList.remove('active'));
+  if(n.startsWith('tx-')){const i=document.getElementById('txitem-'+n.slice(3));if(i)i.classList.add('active');}
+}
+
+function openAddTxModal(){
+  const ex=document.getElementById('addtx-modal');if(ex){ex.remove();return;}
+  const m=document.createElement('div');m.id='addtx-modal';
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:999;display:flex;align-items:center;justify-content:center';
+  const items=Object.entries(TX_PRESETS).map(([k,p])=>`
+    <button onclick="addTx('${k}');document.getElementById('addtx-modal').remove()"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px;cursor:pointer;text-align:left"
+      onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+        <span class="tx-dot ${p.dot}"></span>
+        <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text)">${T(p.lk)}</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${T(p.sk)}</div>
+    </button>`).join('');
+  m.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:20px;width:500px;max-width:92vw">
+    <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);margin-bottom:14px">${T('modal_title')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px">${items}</div>
+    <button onclick="document.getElementById('addtx-modal').remove()"
+      style="background:transparent;border:1px solid var(--border);border-radius:4px;padding:5px 12px;font-family:var(--mono);font-size:10px;color:var(--text2);cursor:pointer">${T('modal_cancel')}</button>
+  </div>`;
+  m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+  document.body.appendChild(m);
+}
+
+function addTx(preset){
+  txCounter++;const id='tx'+txCounter;
+  const cfg=TX_PRESETS[preset]||TX_PRESETS.custom;
+  transactions.push({id,preset,lk:cfg.lk,dot:cfg.dot});
+  renderTxList();buildTxPage(id,cfg);showPage('tx-'+id);upd();
+}
+function delTx(id,e){
+  e.stopPropagation();transactions=transactions.filter(t=>t.id!==id);
+  const p=document.getElementById('txpage-'+id);if(p)p.remove();
+  renderTxList();showPage('report');upd();
+}
+function renderTxList(){
+  document.getElementById('txCount').textContent=transactions.length;
+  const L2=document.getElementById('txList');
+  if(!transactions.length){L2.innerHTML=`<div class="empty-tx">${T('empty_tx')}</div>`;return;}
+  L2.innerHTML=transactions.map((t,i)=>`
+    <div class="tx-list-item" id="txitem-${t.id}" onclick="showPage('tx-${t.id}')">
+      <div class="tx-list-left"><span class="tx-dot ${t.dot}"></span>
+        <div><div class="tx-list-type">${T(t.lk)}</div><div class="tx-list-num">${T('tx_num_pfx')}${i+1}</div></div></div>
+      <button class="tx-del" onclick="delTx('${t.id}',event)">&#10005;</button>
+    </div>`).join('');
+}
+
+function buildTxPage(id,cfg){
+  const div=document.createElement('div');div.id='txpage-'+id;div.className='tx-page';div.style.display='none';
+  const fc=cfg.fromClient?'yes':'no',tc=cfg.toClient?'yes':'no',ft=cfg.fromType,tt=cfg.toType;
+  div.innerHTML=`
+  <div class="tx-fhdr"><div class="tx-ftitle"><span class="tx-dot ${cfg.dot}" style="display:inline-block"></span>
+    ${T(cfg.lk)} <span style="font-size:9px;color:var(--text3);font-weight:400">&lt;transaction&gt;</span></div></div>
+  <div class="card"><div class="card-title">${T('core_fields')}</div><div class="form-grid">
+    <div class="field" id="f-${id}_n"><label><span class="req">*</span> ${T('tx_number')} <span class="xh">&lt;transactionnumber&gt;</span></label>
+      <input type="text" id="${id}_n" placeholder="e.g. CRFLLULL-123456" oninput="vld(this,'req')" onchange="upd()">
+      <span class="em">${T('em_req')}</span></div>
+    <div class="field" id="f-${id}_d"><label><span class="req">*</span> ${T('tx_date')} <span class="xh">&lt;date_transaction&gt;</span></label>
+      <input type="text" id="${id}_d" placeholder="YYYY-MM-DD" maxlength="10" oninput="vld(this,'req|date')" onchange="upd()">
+      <span class="em">${T('em_date')}</span></div>
+    <div class="field" id="f-${id}_a"><label><span class="req">*</span> ${T('tx_amount')} <span class="xh">&lt;amount_local&gt;</span></label>
+      <input type="number" id="${id}_a" placeholder="50000" min="0" step="0.01" oninput="vld(this,'req|amt')" onchange="upd()">
+      <span class="em">${T('em_amt')}</span></div>
+    <div class="field"><label>${T('tx_mode')} <span class="xh">&lt;transmode_code&gt;</span></label>
+      <select id="${id}_m" onchange="upd()">
+        <option value="A">${T('mode_A')}</option><option value="B">${T('mode_B')}</option>
+        <option value="C">${T('mode_C')}</option><option value="D">${T('mode_D')}</option><option value="X">${T('mode_X')}</option>
+      </select></div>
+    <div class="field s2"><label>${T('tx_desc')} <span class="xh">&lt;transaction_description&gt;</span></label>
+      <input type="text" id="${id}_desc" placeholder="e.g. virement, carte de crédit..." onchange="upd()"></div>
+    <div class="field s2"><label>${T('tx_location')} <span class="xh">&lt;transaction_location&gt;</span></label>
+      <input type="text" id="${id}_loc" placeholder="${T('tx_loc_ph')}" onchange="upd()"></div>
+  </div></div>
+  <div class="ft-grid">
+    <div class="side-card">
+      <div class="side-hdr from-hdr">${T('from_side')} <span style="font-size:8px;color:var(--text3)" id="${id}_from_lbl">${fc==='yes'?'&lt;t_from_my_client&gt;':'&lt;t_from&gt;'}</span></div>
+      <div class="sub"><div class="sub-t">${T('party_config')}</div>
+        <div class="form-grid">
+          <div class="field"><label>${T('my_client_q')} <span class="xh">&lt;t_from_...&gt;</span></label>
+            <select id="${id}_fc" onchange="rFromLbl('${id}');upd()">
+              <option value="yes" ${fc==='yes'?'selected':''}>${T('from_my')}</option>
+              <option value="no"  ${fc==='no'?'selected':''}>${T('from_ext')}</option>
+            </select></div>
+          <div class="field"><label>${T('structure_lbl')}</label>
+            <select id="${id}_ft" onchange="togFrom('${id}');upd()">
+              <option value="account" ${ft==='account'?'selected':''}>${T('acc_struct')}</option>
+              <option value="person"  ${ft==='person'?'selected':''}>${T('per_struct')}</option>
+            </select></div>
+        </div>
+        <div class="field" style="margin-top:7px" id="f-${id}_ff">
+          <label><span class="req">*</span> ${T('from_funds')} <span class="xh">&lt;from_funds_code&gt;</span></label>
+          <select id="${id}_ff" onchange="vld(this,'req');upd()">${buildFundsHTML()}</select>
+          <span class="em">${T('em_req')}</span></div>
+        <div class="field" style="margin-top:7px" id="f-${id}_fco">
+          <label><span class="req">*</span> ${T('from_country')} <span class="xh">&lt;from_country&gt;</span></label>
+          <input type="text" id="${id}_fco" placeholder="LU" maxlength="2" style="text-transform:uppercase"
+            oninput="this.value=this.value.toUpperCase();vld(this,'req|cc')" onchange="upd()">
+          <span class="em">${T('em_cc')}</span></div>
+      </div>
+      <div id="${id}_fAccBlk">${buildAccHTML(id,'from',false)}</div>
+      <div id="${id}_fPerBlk" style="display:none">${buildPerBlockHTML(id+'_fp','from_person',true)}</div>
+    </div>
+    <div class="side-card">
+      <div class="side-hdr to-hdr">${T('to_side')} <span style="font-size:8px;color:var(--text3)" id="${id}_to_lbl">${tc==='yes'?'&lt;t_to_my_client&gt;':'&lt;t_to&gt;'}</span></div>
+      <div class="sub"><div class="sub-t">${T('party_config')}</div>
+        <div class="form-grid">
+          <div class="field"><label>${T('my_client_q')} <span class="xh">&lt;t_to_...&gt;</span></label>
+            <select id="${id}_tc" onchange="rToLbl('${id}');upd()">
+              <option value="no"  ${tc==='no'?'selected':''}>${T('to_ext')}</option>
+              <option value="yes" ${tc==='yes'?'selected':''}>${T('to_my')}</option>
+            </select></div>
+          <div class="field"><label>${T('structure_lbl')}</label>
+            <select id="${id}_tt" onchange="togTo('${id}');upd()">
+              <option value="account" ${tt==='account'?'selected':''}>${T('acc_struct')}</option>
+              <option value="person"  ${tt==='person'?'selected':''}>${T('per_struct')}</option>
+              <option value="fx"      ${tt==='fx'?'selected':''}>${T('fx_struct')}</option>
+            </select></div>
+        </div>
+        <div class="field" style="margin-top:7px" id="f-${id}_tf">
+          <label><span class="req">*</span> ${T('to_funds')} <span class="xh">&lt;to_funds_code&gt;</span></label>
+          <select id="${id}_tf" onchange="vld(this,'req');upd()">${buildFundsHTML()}</select>
+          <span class="em">${T('em_req')}</span></div>
+        <div class="field" style="margin-top:7px" id="f-${id}_tco">
+          <label><span class="req">*</span> ${T('to_country')} <span class="xh">&lt;to_country&gt;</span></label>
+          <input type="text" id="${id}_tco" placeholder="FR" maxlength="2" style="text-transform:uppercase"
+            oninput="this.value=this.value.toUpperCase();vld(this,'req|cc')" onchange="upd()">
+          <span class="em">${T('em_cc')}</span></div>
+      </div>
+      <div id="${id}_tAccBlk" style="${tt!=='account'?'display:none':''}">${buildAccHTML(id,'to',true)}</div>
+      <div id="${id}_tPerBlk" style="${tt!=='person'?'display:none':''}">${buildPerBlockHTML(id+'_tp','to_person',true)}</div>
+      <div id="${id}_tFxBlk"  style="${tt!=='fx'?'display:none':''}">${buildFxHTML(id)}${buildPerBlockHTML(id+'_tfp','fx_recip',true)}</div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-s" onclick="showPage('report')">&#8592; ${T('act_report')}</button>
+    <button class="btn btn-s" onclick="showPage('indicators')">${T('act_ind')}</button>
+    <button class="btn btn-g" onclick="exportTXT()">&#8595; ${T('act_export')}</button>
+  </div>`;
+  document.getElementById('tx-pages').appendChild(div);
+  togFrom(id);togTo(id);
+}
+
+function buildAccHTML(txId,side,minimal){
+  const p=txId+'_'+side+'_ac';
+  const atO=`<option value="">—</option><option value="C">${T('at_C')}</option><option value="S">${T('at_S')}</option><option value="A">${T('at_A')}</option><option value="B">${T('at_B')}</option><option value="V">${T('at_V')}</option>`;
+  const stO=`<option value="">—</option><option value="A">${T('st_A')}</option><option value="E">${T('st_E')}</option><option value="I">${T('st_I')}</option>`;
+  return `<div class="sub"><div class="sub-t">${T('acc_section')} &lt;${side}_account&gt;</div>
+    <div class="form-grid">
+      <div class="field"><label>${T('acc_swift')} <span class="xh">&lt;swift&gt;</span></label>
+        <input type="text" id="${p}_sw" placeholder="CRFLLULL" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onchange="upd()"></div>
+      <div class="field" id="f-${p}_ac"><label><span class="req">*</span> ${T('acc_number')} <span class="xh">&lt;account&gt;</span></label>
+        <input type="text" id="${p}_ac" placeholder="LU001111222233334444" oninput="vld(this,'req')" onchange="upd()">
+        <span class="em">${T('em_req')}</span></div>
+      <div class="field"><label>${T('acc_iban')} <span class="xh">&lt;iban&gt;</span></label>
+        <input type="text" id="${p}_ib" placeholder="LU001111222233334444" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onchange="upd()"></div>
+      <div class="field"><label>${T('acc_name')} <span class="xh">&lt;account_name&gt;</span></label>
+        <input type="text" id="${p}_an" placeholder="Max BRAUN" onchange="upd()"></div>
+      ${!minimal?`
+      <div class="field"><label>${T('acc_currency')} <span class="xh">&lt;currency_code&gt;</span></label>
+        <select id="${p}_cu" onchange="upd()"><option value="">—</option><option value="EUR">EUR</option><option value="USD">USD</option><option value="GBP">GBP</option><option value="CHF">CHF</option></select></div>
+      <div class="field"><label>${T('acc_client')} <span class="xh">&lt;client_number&gt;</span></label>
+        <input type="text" id="${p}_cn" placeholder="112233" onchange="upd()"></div>`:''}
+      <div class="field"><label>${T('acc_type')} <span class="xh">&lt;personal_account_type&gt;</span></label>
+        <select id="${p}_at" onchange="upd()">${atO}</select></div>
+      <div class="field"><label>${T('acc_status')} <span class="xh">&lt;status_code&gt;</span></label>
+        <select id="${p}_st" onchange="upd()">${stO}</select></div>
+      <div class="field"><label>${T('acc_opened')} <span class="xh">&lt;opened&gt;</span></label>
+        <input type="text" id="${p}_op" placeholder="YYYY-MM-DD" maxlength="10" onchange="upd()"></div>
+      ${!minimal?`
+      <div class="field"><label>${T('acc_balance')} <span class="xh">&lt;balance&gt;</span></label>
+        <input type="number" id="${p}_bl" placeholder="0" onchange="upd()"></div>
+      <div class="field"><label>${T('acc_baldate')} <span class="xh">&lt;date_balance&gt;</span></label>
+        <input type="text" id="${p}_bd" placeholder="YYYY-MM-DD" maxlength="10" onchange="upd()"></div>`:`
+      <div class="field"><label>${T('acc_closed')} <span class="xh">&lt;closed&gt;</span></label>
+        <input type="text" id="${p}_cl" placeholder="YYYY-MM-DD" maxlength="10" onchange="upd()"></div>`}
+    </div>
+    <div class="div"></div>
+    <div class="sub-t">${T('sig_full')} &lt;signatory&gt;&lt;t_person&gt;</div>
+    ${buildPerFieldsHTML(p+'_sg',false)}
+    <div class="field" style="margin-top:7px"><label>${T('sig_role')} <span class="xh">&lt;role&gt;</span></label>
+      <select id="${p}_sg_role" onchange="upd()">
+        <option value="A">${T('role_A')}</option><option value="B">${T('role_B')}</option>
+        <option value="C">${T('role_C')}</option><option value="D">${T('role_D')}</option><option value="E">${T('role_E')}</option>
+      </select></div>
+  </div>`;
+}
+
+function buildPerBlockHTML(prefix,xmlTag,withPassport){
+  const label=xmlTag==='fx_recip'?T('fx_recip'):xmlTag;
+  return `<div class="sub"><div class="sub-t">${T('per_section')} &lt;${label}&gt;</div>${buildPerFieldsHTML(prefix,withPassport)}</div>`;
+}
+
+function buildPerFieldsHTML(p,withPassport){
+  return `<div class="form-grid c3">
+    <div class="field"><label>${T('per_gender')} <span class="xh">&lt;gender&gt;</span></label>
+      <select id="${p}_ge" onchange="upd()"><option value="">—</option><option value="M">${T('gender_M')}</option><option value="F">${T('gender_F')}</option></select></div>
+    <div class="field"><label>${T('per_fname')} <span class="xh">&lt;first_name&gt;</span></label>
+      <input type="text" id="${p}_fn" placeholder="Max" onchange="upd()"></div>
+    <div class="field"><label>${T('per_lname')} <span class="xh">&lt;last_name&gt;</span></label>
+      <input type="text" id="${p}_ln" placeholder="BRAUN" onchange="upd()"></div>
+    <div class="field"><label>${T('per_dob')} <span class="xh">&lt;birthdate&gt;</span></label>
+      <input type="text" id="${p}_bd" placeholder="YYYY-MM-DD" maxlength="10" onchange="upd()"></div>
+    <div class="field"><label>${T('per_pob')} <span class="xh">&lt;birth_place&gt;</span></label>
+      <input type="text" id="${p}_bp" placeholder="Luxembourg" onchange="upd()"></div>
+    <div class="field"><label>${T('per_nat')} <span class="xh">&lt;nationality1&gt;</span></label>
+      <input type="text" id="${p}_na" placeholder="LU" maxlength="2" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onchange="upd()"></div>
+    <div class="field"><label>${T('per_res')} <span class="xh">&lt;residence&gt;</span></label>
+      <input type="text" id="${p}_re" placeholder="LU" maxlength="2" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onchange="upd()"></div>
+    ${withPassport?`
+    <div class="field"><label>${T('per_passport')} <span class="xh">&lt;passport_number&gt;</span></label>
+      <input type="text" id="${p}_pp" placeholder="AA123456" onchange="upd()"></div>
+    <div class="field"><label>${T('per_ppc')} <span class="xh">&lt;passport_country&gt;</span></label>
+      <input type="text" id="${p}_pc" placeholder="IT" maxlength="2" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onchange="upd()"></div>`:''}
+  </div>
+  <div style="margin-top:7px"><div class="sub-t" style="margin-bottom:6px">${T('addr_section')} &lt;address&gt;</div>
+    <div class="form-grid c3">
+      <div class="field"><label>${T('addr_type')}</label>
+        <select id="${p}_at" onchange="upd()">
+          <option value="1">${T('addr_t1')}</option><option value="2">${T('addr_t2')}</option><option value="3">${T('addr_t3')}</option>
+        </select></div>
+      <div class="field"><label>${T('addr_zip')}</label><input type="text" id="${p}_zp" placeholder="1230" onchange="upd()"></div>
+      <div class="field"><label>${T('addr_country')}</label>
+        <input type="text" id="${p}_ac" placeholder="LU" maxlength="2" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onchange="upd()"></div>
+      <div class="field s2"><label>${T('addr_street')}</label><input type="text" id="${p}_ad" placeholder="1, rue ABC" onchange="upd()"></div>
+      <div class="field"><label>${T('addr_city')}</label><input type="text" id="${p}_ci" placeholder="Luxembourg" onchange="upd()"></div>
+    </div></div>`;
+}
+
+function buildFxHTML(id){
+  return `<div class="sub"><div class="sub-t">${T('fx_section')} &lt;to_foreign_currency&gt;</div>
+    <div class="form-grid c3">
+      <div class="field"><label>${T('fx_code')} <span class="xh">&lt;foreign_currency_code&gt;</span></label>
+        <input type="text" id="${id}_fcc" placeholder="USD" maxlength="3" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onchange="upd()"></div>
+      <div class="field"><label>${T('fx_amount')} <span class="xh">&lt;foreign_amount&gt;</span></label>
+        <input type="number" id="${id}_fca" placeholder="1285.95" step="0.01" onchange="upd()"></div>
+      <div class="field"><label>${T('fx_rate')} <span class="xh">&lt;foreign_exchange_rate&gt;</span></label>
+        <input type="number" id="${id}_fcr" placeholder="1.07" step="0.0001" onchange="upd()"></div>
+    </div></div>`;
+}
+
+function rFromLbl(id){const el=document.getElementById(id+'_from_lbl');if(el)el.textContent=G(id+'_fc')==='yes'?'<t_from_my_client>':'<t_from>';}
+function rToLbl(id){const el=document.getElementById(id+'_to_lbl');if(el)el.textContent=G(id+'_tc')==='yes'?'<t_to_my_client>':'<t_to>';}
+function togFrom(id){
+  const t=G(id+'_ft');
+  document.getElementById(id+'_fAccBlk').style.display=t==='account'?'':'none';
+  document.getElementById(id+'_fPerBlk').style.display=t==='person'?'':'none';
+}
+function togTo(id){
+  const t=G(id+'_tt');
+  document.getElementById(id+'_tAccBlk').style.display=t==='account'?'':'none';
+  document.getElementById(id+'_tPerBlk').style.display=t==='person'?'':'none';
+  document.getElementById(id+'_tFxBlk').style.display=t==='fx'?'':'none';
+}
+
+// ── XML generation ────────────────────────────────────────────────────────────
+function G(id){const e=document.getElementById(id);return e?e.value.trim():'';}
+function TX(nm,val,i){return val?`${i}<${nm}>${esc(val)}</${nm}>\n`:''}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function DT(d){return d?d+'T00:00:00':''}
+function gPer(p,i,wp){
+  let x='';
+  x+=TX('gender',G(p+'_ge'),i);x+=TX('first_name',G(p+'_fn'),i);x+=TX('last_name',G(p+'_ln'),i);
+  if(G(p+'_bd'))x+=TX('birthdate',DT(G(p+'_bd')),i);
+  x+=TX('birth_place',G(p+'_bp'),i);x+=TX('nationality1',G(p+'_na'),i);x+=TX('residence',G(p+'_re'),i);
+  if(wp){x+=TX('passport_number',G(p+'_pp'),i);x+=TX('passport_country',G(p+'_pc'),i);}
+  const hasA=G(p+'_ad')||G(p+'_ci')||G(p+'_ac');
+  if(hasA){
+    x+=`${i}<addresses>\n${i}  <address>\n`;
+    x+=TX('address_type',G(p+'_at')||'1',i+'    ');x+=TX('address',G(p+'_ad'),i+'    ');
+    x+=TX('city',G(p+'_ci'),i+'    ');x+=TX('zip',G(p+'_zp'),i+'    ');x+=TX('country_code',G(p+'_ac'),i+'    ');
+    x+=`${i}  </address>\n${i}</addresses>\n`;
+  }
+  return x;
+}
+function gAcc(txId,side,i,minimal){
+  const p=txId+'_'+side+'_ac';if(!G(p+'_ac'))return'';
+  const tag=side+'_account';let x=`${i}<${tag}>\n`;
+  x+=TX('swift',G(p+'_sw'),i+'  ');x+=TX('account',G(p+'_ac'),i+'  ');
+  if(!minimal)x+=TX('currency_code',G(p+'_cu'),i+'  ');
+  x+=TX('account_name',G(p+'_an'),i+'  ');x+=TX('iban',G(p+'_ib'),i+'  ');
+  if(!minimal)x+=TX('client_number',G(p+'_cn'),i+'  ');
+  x+=TX('personal_account_type',G(p+'_at'),i+'  ');
+  const sb=gPer(p+'_sg',i+'      ',false);
+  if(sb.trim()){const role=G(p+'_sg_role')||'A';x+=`${i}  <signatory>\n${i}    <t_person>\n${sb}${i}    </t_person>\n${TX('role',role,i+'    ')}${i}  </signatory>\n`;}
+  if(G(p+'_op'))x+=TX('opened',DT(G(p+'_op')),i+'  ');
+  if(!minimal){x+=TX('balance',G(p+'_bl'),i+'  ');if(G(p+'_bd'))x+=TX('date_balance',DT(G(p+'_bd')),i+'  ');}
+  else{if(G(p+'_cl'))x+=TX('closed',DT(G(p+'_cl')),i+'  ');}
+  if(G(p+'_st'))x+=TX('status_code',G(p+'_st'),i+'  ');
+  x+=`${i}</${tag}>\n`;return x;
+}
+function gTx(tx){
+  const id=tx.id,i2='  ',i3='    ',i4='      ',i5='        ';
+  let x=`${i2}<transaction>\n`;
+  x+=TX('transactionnumber',G(id+'_n'),i3);x+=TX('transaction_location',G(id+'_loc'),i3);
+  x+=TX('transaction_description',G(id+'_desc'),i3);
+  if(G(id+'_d'))x+=TX('date_transaction',DT(G(id+'_d')),i3);
+  x+=TX('transmode_code',G(id+'_m')||'A',i3);x+=TX('amount_local',G(id+'_a'),i3);
+  const fC=G(id+'_fc')==='yes',fT=G(id+'_ft'),fTag=fC?'t_from_my_client':'t_from';
+  x+=`${i3}<${fTag}>\n`;x+=TX('from_funds_code',G(id+'_ff'),i4);
+  if(fT==='account'){x+=gAcc(id,'from',i4,false);}
+  else{const pb=gPer(id+'_fp',i5,false);if(pb.trim())x+=`${i4}<from_person>\n${pb}${i4}</from_person>\n`;}
+  x+=TX('from_country',G(id+'_fco'),i4);x+=`${i3}</${fTag}>\n`;
+  const tC=G(id+'_tc')==='yes',tT=G(id+'_tt'),tTag=tC?'t_to_my_client':'t_to';
+  x+=`${i3}<${tTag}>\n`;x+=TX('to_funds_code',G(id+'_tf'),i4);
+  if(tT==='fx'){
+    const fcc=G(id+'_fcc'),fca=G(id+'_fca'),fcr=G(id+'_fcr');
+    if(fcc||fca){x+=`${i4}<to_foreign_currency>\n`;x+=TX('foreign_currency_code',fcc,i5);x+=TX('foreign_amount',fca,i5);x+=TX('foreign_exchange_rate',fcr,i5);x+=`${i4}</to_foreign_currency>\n`;}
+    const pb=gPer(id+'_tfp',i5,true);if(pb.trim())x+=`${i4}<to_person>\n${pb}${i4}</to_person>\n`;
+  } else if(tT==='person'){
+    const pb=gPer(id+'_tp',i5,true);if(pb.trim())x+=`${i4}<to_person>\n${pb}${i4}</to_person>\n`;
+  } else x+=gAcc(id,'to',i4,true);
+  x+=TX('to_country',G(id+'_tco'),i4);x+=`${i3}</${tTag}>\n`;
+  x+=`${i2}</transaction>\n`;return x;
+}
+function genXML(){
+  let xml=`<report>\n`;
+  xml+=TX('rentity_id',G('rentity_id'),'  ');xml+=TX('submission_code',G('submission_code'),'  ');
+  xml+=TX('report_code',G('report_code'),'  ');xml+=TX('entity_reference',G('entity_reference'),'  ');
+  if(G('submission_date'))xml+=TX('submission_date',DT(G('submission_date')),'  ');
+  xml+=TX('currency_code_local',G('currency_code_local'),'  ');xml+=TX('reason',G('reason'),'  ');
+  for(const tx of transactions)xml+=gTx(tx);
+  const inds=getInds();
+  if(inds.length){xml+=`  <report_indicators>\n`;inds.forEach(i=>xml+=TX('indicator',i,'    '));xml+=`  </report_indicators>\n`;}
+  xml+=`</report>`;return xml;
+}
+function hlXML(xml){
+  return xml.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/&lt;\/([a-zA-Z_]+)&gt;/g,(_,n)=>`<span class="xt">&lt;/${n}&gt;</span>`)
+    .replace(/&lt;([a-zA-Z_]+)&gt;([^&\n]*)/g,(_,t,v)=>`<span class="xt">&lt;${t}&gt;</span><span class="xv">${v}</span>`)
+    .replace(/&lt;([a-zA-Z_]+)&gt;/g,(_,n)=>`<span class="xt">&lt;${n}&gt;</span>`);
+}
+function updateStatus(){
+  const errs=document.querySelectorAll('.field.err').length;
+  const s=document.getElementById('vStatus');if(!s)return;
+  if(errs===0){s.className='s-ok';s.textContent=T('val_ready');}
+  else{s.className='s-err';s.textContent=`${errs} ${errs===1?T('val_err1'):T('val_errN')}`;}
+  document.getElementById('vCount').textContent=`${errs} err`;
+}
+function upd(){document.getElementById('xp').innerHTML=hlXML(genXML());updateStatus();}
+function exportTXT(){
+  const xml=genXML(),ref=G('entity_reference')||'report',d=G('submission_date')||new Date().toISOString().slice(0,10);
+  const blob=new Blob([xml],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`goAML_${ref}_${d}.txt`;a.click();
+}
+function copyXML(){
+  navigator.clipboard.writeText(genXML()).then(()=>{
+    const b=event.currentTarget,o=b.innerHTML;
+    b.innerHTML=T('copied');b.style.color='var(--green)';
+    setTimeout(()=>{b.innerHTML=o;b.style.color='';},1600);
+  });
+}
+function loadSample(){
+  document.getElementById('rentity_id').value='1';
+  document.getElementById('submission_code').value='E';
+  document.getElementById('report_code').value='STR';
+  document.getElementById('entity_reference').value='ma-reference-2022';
+  document.getElementById('submission_date').value='2022-06-03';
+  document.getElementById('currency_code_local').value='EUR';
+  document.getElementById('reason').value='Déclaration type avec transaction type virement — client Max BRAUN performed a EUR 50,000 wire transfer to a French account.';
+  addTx('wire');
+  const id=transactions[transactions.length-1].id;
+  document.getElementById(id+'_n').value='CRFLLULL-123456';
+  document.getElementById(id+'_desc').value='virement';
+  document.getElementById(id+'_d').value='2022-06-03';
+  document.getElementById(id+'_m').value='A';
+  document.getElementById(id+'_a').value='50000';
+  document.getElementById(id+'_ff').value='Q';
+  document.getElementById(id+'_fco').value='LU';
+  document.getElementById(id+'_tf').value='Q';
+  document.getElementById(id+'_tco').value='FR';
+  const fa=id+'_from_ac';
+  document.getElementById(fa+'_sw').value='CRFLLULL';
+  document.getElementById(fa+'_ac').value='LU001111222233334444';
+  document.getElementById(fa+'_ib').value='LU001111222233334444';
+  document.getElementById(fa+'_an').value='Max BRAUN';
+  document.getElementById(fa+'_cu').value='EUR';
+  document.getElementById(fa+'_at').value='C';
+  document.getElementById(fa+'_cn').value='112233';
+  document.getElementById(fa+'_op').value='2010-05-02';
+  document.getElementById(fa+'_bl').value='655000';
+  document.getElementById(fa+'_bd').value='2022-06-03';
+  document.getElementById(fa+'_st').value='A';
+  document.getElementById(fa+'_sg_ge').value='M';
+  document.getElementById(fa+'_sg_fn').value='Max';
+  document.getElementById(fa+'_sg_ln').value='BRAUN';
+  document.getElementById(fa+'_sg_bd').value='1970-01-01';
+  document.getElementById(fa+'_sg_bp').value='Luxembourg';
+  document.getElementById(fa+'_sg_na').value='LU';
+  document.getElementById(fa+'_sg_re').value='LU';
+  document.getElementById(fa+'_sg_at').value='1';
+  document.getElementById(fa+'_sg_ad').value='1, rue ABC';
+  document.getElementById(fa+'_sg_ci').value='Luxembourg';
+  document.getElementById(fa+'_sg_zp').value='1230';
+  document.getElementById(fa+'_sg_ac').value='LU';
+  const ta=id+'_to_ac';
+  document.getElementById(ta+'_sw').value='TESTFRFR';
+  document.getElementById(ta+'_ac').value='FR0011112222333344445555666';
+  document.getElementById(ta+'_ib').value='FR0011112222333344445555666';
+  document.getElementById(ta+'_an').value='Nastasja MARTINS';
+  const i18=document.querySelector('#indGrid input[value="18"]');
+  if(i18){i18.checked=true;i18.closest('.ind-chip').classList.add('sel');}
+  upd();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+applyLang();
+buildIndicators();
+document.getElementById('submission_date').value=new Date().toISOString().slice(0,10);
+upd();
+</script>
+</body>
+</html>
