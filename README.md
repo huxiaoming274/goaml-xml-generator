@@ -62,3 +62,15 @@ The XML generation logic itself requires no changes.
 - **goAML version:** 5.x
 - **Browser:** Any modern browser (Chrome, Firefox, Edge, Safari)
 - **Dependencies:** None — fully self-contained single-file application
+
+---
+
+## References
+
+### Luxembourg CRF (Cellule de Renseignement Financier)
+- Official website: [crf.public.lu](https://crf.public.lu/en.html)
+- Suspicious Operations Report guideline (EN, 2026): [Guideline v2.2](https://financialcrime.lu/assets/pdfs/articles/2026/01/20260106%20EN%20Suspicious%20Operations%20Report%20%C2%A6%20Guideline%20applicable%20from%2006-01-2026%20(version%202-2)_%5BMD5_9F355B1BC852B4F840C52C1455EA978F%5D.pdf)
+
+### UNODC goAML
+- Official goAML page: [unodc.org — goAML](https://www.unodc.org/unodc/en/global-it-products/goaml.html)
+- goAML is deployed in approximately 60 countries. Each country's FIU defines its own indicator list, report codes, and submission rules — consult your local FIU documentation before adapting this tool.
