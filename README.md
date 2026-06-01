@@ -74,3 +74,16 @@ The XML generation logic itself requires no changes.
 ### UNODC goAML
 - Official goAML page: [unodc.org — goAML](https://www.unodc.org/unodc/en/global-it-products/goaml.html)
 - goAML is deployed in approximately 60 countries. Each country's FIU defines its own indicator list, report codes, and submission rules — consult your local FIU documentation before adapting this tool.
+
+---
+
+## Official CRF Guidelines (included in `/docs`)
+
+The following official CRF guideline documents are included in the [`docs/`](docs/) folder for reference:
+
+| File | Language | Version | Source |
+|---|---|---|---|
+| [`CRF_Guideline_SOR_2026_EN.pdf`](docs/CRF_Guideline_SOR_2026_EN.pdf) | English | v2.2 — effective 06 Jan 2026 | [financialcrime.lu](https://financialcrime.lu/2026/01/06/CRF-Suspicious-Operations-Report-Guidelines/) |
+| [`CRF_Guideline_SOR_FR.pdf`](docs/CRF_Guideline_SOR_FR.pdf) | Français | v2.1 — 01 Apr 2020 | [justice.public.lu](https://justice.public.lu/fr/organisation-justice/crf/goaml.html) |
+
+> The French v2.1 is the latest publicly available French-language version. For the most current version, check [crf.public.lu](https://crf.public.lu/fr/publications.html).
